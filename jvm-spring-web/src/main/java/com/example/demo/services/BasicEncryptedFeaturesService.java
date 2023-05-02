@@ -4,11 +4,15 @@ import growthbook.sdk.java.FeatureFetchException;
 import growthbook.sdk.java.FeatureRefreshCallback;
 import growthbook.sdk.java.FeatureRefreshStrategy;
 import growthbook.sdk.java.GBFeaturesRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class BasicEncryptedFeaturesService extends GBFeaturesRepository {
+    private static final Logger logger = LoggerFactory.getLogger(BasicEncryptedFeaturesService.class);
+
     @Autowired
     public BasicEncryptedFeaturesService() {
         super("https://cdn.growthbook.io", "sdk-862b5mHcP9XPugqD", "BhB1wORFmZLTDjbvstvS8w==", FeatureRefreshStrategy.STALE_WHILE_REVALIDATE, 15);
@@ -29,19 +33,18 @@ public class BasicEncryptedFeaturesService extends GBFeaturesRepository {
     }
 
     void handleError(FeatureFetchException e) {
-        e.printStackTrace();
-
         switch (e.getErrorCode()) {
+            case CONFIGURATION_ERROR -> {
+                logger.error("💥 Configuration error", e);
+            }
             case NO_RESPONSE_ERROR -> {
-                // Handle NO_RESPONSE_ERROR
+                logger.error("💥 No response", e);
             }
-
             case SSE_CONNECTION_ERROR -> {
-                // SSE is not applicable for this service but this was added here for completion.
+                logger.error("💥 SSE is not applicable for this service", e);
             }
-
-            case CONFIGURATION_ERROR, UNKNOWN -> {
-                throw new RuntimeException(e);
+            case UNKNOWN -> {
+                logger.error("💥 Unknown error", e);
             }
         }
     }
